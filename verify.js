@@ -110,30 +110,31 @@ function verifyMoxfield(blob) {
   }
 }
 
-function makeMoxfieldReq(id) {
-  https.get(`https://api2.moxfield.com/v3/decks/all/${id}`, (res) => {
-    let data = "";
-
-    // A chunk of data has been recieved.
-    res.on("data", chunk => {
-      data += chunk;
+async function makeMoxfieldReq(id) {
+  return new Promise((resolve) => {
+    https.get(`https://api2.moxfield.com/v3/decks/all/${id}`, (res) => {
+      let data = "";
+  
+      // A chunk of data has been recieved.
+      res.on("data", chunk => {
+        data += chunk;
+      });
+  
+      // The whole resonse has been received. Print out the result.
+      res.on("end", () => {
+        const output = verifyMoxfield(JSON.parse(data));
+        // console.log(output);
+        resolve(output);
+      });
+    }).on("error", err => {
+      console.log("Error: " + err.message);
     });
-
-    // The whole resonse has been received. Print out the result.
-    res.on("end", () => {
-      const output = verifyMoxfield(JSON.parse(data));
-      console.log(output);
-      return output;
-    });
-  }).on("error", err => {
-    console.log("Error: " + err.message);
   });
 }
 
 function rateLimit(delay, func, args) {
   return new Promise(async (resolve) => {
     const output = await func(args);
-    console.log('moving on to timer'); //shit
     setTimeout(() => {
       resolve(output);
     }, delay);
