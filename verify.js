@@ -1,20 +1,18 @@
 const https = require('https');
 
-const blob = `
-https://www.moxfield.com/decks/Y2v1HjkBmE22iiZIWVpr5w
-https://www.moxfield.com/decks/u5L4FEUQdkuSHyzrNeLCJg
-`;
+// const blob = `
+// https://www.moxfield.com/decks/Y2v1HjkBmE22iiZIWVpr5w
+// https://www.moxfield.com/decks/u5L4FEUQdkuSHyzrNeLCJg
+// `;
 
-const decklists = blob.split('\n');
+// const decklists = blob.split('\n');
+
+const blob = `hey_kelvin	https://www.moxfield.com/decks/u5L4FEUQdkuSHyzrNeLCJg
+kelvin_2	https://www.moxfield.com/decks/Y2v1HjkBmE22iiZIWVpr5w
+mr_kelvin	https://www.moxfield.com/decks/CB_Bu5KnF06CgCShdZNNqA`;
 
 // GET https://api2.moxfield.com/v3/decks/all/:deckHash
 // res json data
-
-/* 
-  cards (count): >= 100
-  quantity: 1 except basics
-  pointsMax: 10
-*/
 
 const pointsList = {
   'Ancestral Recall': 7,
@@ -59,21 +57,31 @@ const pointsList = {
   'Yawgmoth\s Will': 1,
 };
 
-// const criteria = {
-//   minCount: 100,
-//   pointsMax: 10,
-//   nonbasicCount: 1,
-// };
+function parseSheets(blob) {
+  const lines = blob.split('\n');
+  const map = {};
+  const reverseMap = {};
 
-// check sticker/attactions >= 10
+  for (const l of lines) {
+    const [user, deck] = l.split(/[\s\t]/);
+    map[user] = deck;
+    reverseMap[deck] = user;
+  }
+
+  return [map, reverseMap];
+}
+
 function verifyMoxfield(blob) {
   try {
     const cards = blob.boards.mainboard.cards;
     const output = {
+      name: blob.name,
       nonbasicDuplicates: [],
       bannedCards: [],
+      stickerDuplicates: [],
       count: 0,
       points: 0,
+      stickerCount: 0,
       isInvalid: false
     };
 
@@ -95,11 +103,23 @@ function verifyMoxfield(blob) {
       }
     }
 
+    if (blob.boards.stickers.count > 0) {
+      for (const sticker of Object.values(blob.boards.stickers.cards)) {
+        output.stickerCount += sticker.quantity;
+
+        if (sticker.quantity > 1) {
+          output.stickerDuplicates.push(sticker.card.name);
+        }
+      }
+    }
+
     if (
       (output.count < 100) ||
       (output.points > 10) ||
       (output.nonbasicDuplicates.length > 0) ||
-      (output.bannedCards.length > 0)
+      (output.bannedCards.length > 0) ||
+      (output.stickerDuplicates.length > 0) ||
+      ((output.stickerCount > 0) && (output.stickerCount < 10))
     ) {
       output.isInvalid = true;
     }
@@ -123,7 +143,6 @@ async function makeMoxfieldReq(id) {
       // The whole resonse has been received. Print out the result.
       res.on("end", () => {
         const output = verifyMoxfield(JSON.parse(data));
-        // console.log(output);
         resolve(output);
       });
     }).on("error", err => {
@@ -142,10 +161,12 @@ function rateLimit(delay, func, args) {
 }
 
 // rate limited sequential https requests
-async function processLinks (links) {
+async function processLinks(map, reverseMap) {
   const limit = 10000;
   const moxfieldIDs = [];
-  const output = [];
+  const output = {};
+  // const users = Object.keys(map);
+  const links = Object.values(map);
 
   for (const link of links) {
     if (/moxfield/.test(link)) {
@@ -160,23 +181,15 @@ async function processLinks (links) {
     } else {
       res = await rateLimit(limit, makeMoxfieldReq, moxfieldIDs[i]);
     }
-    output.push(res);
+    output[reverseMap[`https://www.moxfield.com/decks/${moxfieldIDs[i]}`]] = res;
   }
 
   console.log(output);
 }
 
-processLinks(decklists);
 
+// console.log(parseSheets(blob));
+// processLinks(decklists);
 
-// async function f1() {
-//   const ids = ['Y2v1HjkBmE22iiZIWVpr5w', 'u5L4FEUQdkuSHyzrNeLCJg'];
-//   for (let i = 0; i < ids.length; i++) {
-//     if (i === ids.length - 1) {
-//       await rateLimit(0, makeMoxfieldReq, ids[i]);
-//     } else await rateLimit(10000, makeMoxfieldReq, ids[i]);
-//   }
-// }
-
-// f1();
+processLinks(...parseSheets(blob));
 
