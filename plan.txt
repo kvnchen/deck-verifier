@@ -1,0 +1,10 @@
+
+
+1. GET decklist data
+2. verify deck legality
+3. make new moxfield copy of the deck
+
+
+hm, not finding deck legality in json data
+seems to be computed in front end
+
