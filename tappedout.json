@@ -1,0 +1,284 @@
+{
+    "landData": [
+        {
+            "name": "White",
+            "y": 8,
+            "color": "#FFFFFF"
+        },
+        {
+            "name": "Blue",
+            "y": 11,
+            "color": "#361ED6"
+        },
+        {
+            "name": "Black",
+            "y": 8,
+            "color": "#000000"
+        },
+        {
+            "name": "Red",
+            "y": 7,
+            "color": "#820A03"
+        }
+    ],
+    "colorData": [
+        {
+            "name": "White",
+            "y": 12,
+            "color": "#FFFFFF"
+        },
+        {
+            "name": "Blue",
+            "y": 41,
+            "color": "#361ED6"
+        },
+        {
+            "name": "Black",
+            "y": 10,
+            "color": "#000000"
+        },
+        {
+            "name": "Red",
+            "y": 12,
+            "color": "#820A03"
+        }
+    ],
+    "curveData": [
+        [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7
+        ],
+        [
+            {
+                "name": "White",
+                "data": [
+                    0,
+                    2,
+                    0,
+                    0,
+                    0,
+                    1,
+                    1,
+                    0
+                ]
+            },
+            {
+                "name": "Blue",
+                "data": [
+                    0,
+                    0,
+                    0,
+                    1,
+                    3,
+                    5,
+                    5,
+                    1
+                ]
+            },
+            {
+                "name": "Black",
+                "data": [
+                    0,
+                    0,
+                    0,
+                    1,
+                    0,
+                    0,
+                    0,
+                    0
+                ]
+            },
+            {
+                "name": "Red",
+                "data": [
+                    0,
+                    1,
+                    0,
+                    0,
+                    1,
+                    0,
+                    1,
+                    0
+                ]
+            },
+            {
+                "name": "Gold",
+                "data": [
+                    0,
+                    0,
+                    0,
+                    4,
+                    5,
+                    3,
+                    1,
+                    1
+                ]
+            },
+            {
+                "name": "Colorless",
+                "data": [
+                    7,
+                    1,
+                    12,
+                    3,
+                    3,
+                    2,
+                    0,
+                    0
+                ]
+            }
+        ],
+        [
+            "#FFFFFF",
+            "#361ED6",
+            "#000000",
+            "#820A03",
+            "#FFE87C",
+            "#817679"
+        ]
+    ],
+    "typeData": [
+        [
+            "Instant",
+            3,
+            [
+                "Lightning Bolt",
+                "Path to Exile",
+                "Swords to Plowshares"
+            ]
+        ],
+        [
+            "Sorcery",
+            10,
+            [
+                "Capture of Jingzhou",
+                "Karn's Temporal Sundering",
+                "Part the Waterveil",
+                "Supreme Verdict",
+                "Temporal Manipulation",
+                "Temporal Mastery",
+                "Tezzeret's Gambit",
+                "Time Warp",
+                "Toxic Deluge",
+                "Walk the Aeons"
+            ]
+        ],
+        [
+            "Artifact",
+            26,
+            [
+                "Azorius Signet",
+                "Boros Signet",
+                "Chrome Mox",
+                "Coalition Relic",
+                "Contagion Clasp",
+                "Dimir Signet",
+                "Ensnaring Bridge",
+                "Expedition Map",
+                "Gilded Lotus",
+                "Grim Monolith",
+                "Izzet Signet",
+                "Mind Stone",
+                "Mox Amber",
+                "Mox Diamond",
+                "Mox Jet",
+                "Mox Opal",
+                "Mox Ruby",
+                "Mox Sapphire",
+                "Orzhov Signet",
+                "Rakdos Signet",
+                "Talisman of Creativity",
+                "Talisman of Dominance",
+                "Talisman of Progress",
+                "The Chain Veil",
+                "Thran Dynamo",
+                "Worn Powerstone"
+            ]
+        ],
+        [
+            "Planeswalker",
+            24,
+            [
+                "Ashiok, Nightmare Muse",
+                "Chandra, Awakened Inferno",
+                "Chandra, Torch of Defiance",
+                "Dack Fayden",
+                "Daretti, Ingenious Iconoclast",
+                "Elspeth, Sun's Champion",
+                "Gideon Jura",
+                "Jace, Architect of Thought",
+                "Jace, the Mind Sculptor",
+                "Karn, Scion of Urza",
+                "Kaya, Ghost Assassin",
+                "Narset Transcendent",
+                "Nicol Bolas, Dragon-God",
+                "Nicol Bolas, God-Pharaoh",
+                "Ral Zarek",
+                "Saheeli, Sublime Artificer",
+                "Tamiyo, the Moon Sage",
+                "Teferi, Hero of Dominaria",
+                "Teferi, Temporal Archmage",
+                "Teferi, Time Raveler",
+                "Tezzeret the Seeker",
+                "Tezzeret, Agent of Bolas",
+                "Tezzeret, Master of the Bridge",
+                "Will Kenrith"
+            ]
+        ],
+        [
+            "Creature",
+            2,
+            [
+                "Flux Channeler",
+                "Golos, Tireless Pilgrim"
+            ]
+        ],
+        [
+            "Land",
+            35,
+            [
+                "Ancient Den",
+                "Ancient Tomb",
+                "Arid Mesa",
+                "Badlands",
+                "Bloodstained Mire",
+                "City of Traitors",
+                "Darksteel Citadel",
+                "Flooded Strand",
+                "Great Furnace",
+                "Hallowed Fountain",
+                "Interplanar Beacon",
+                "Inventors' Fair",
+                "Karakas",
+                "Karn's Bastion",
+                "Marsh Flats",
+                "Misty Rainforest",
+                "Plateau",
+                "Polluted Delta",
+                "Scalding Tarn",
+                "Scrubland",
+                "Seat of the Synod",
+                "Snow-Covered Island",
+                "Spire of Industry",
+                "Steam Vents",
+                "Tolarian Academy",
+                "Tundra",
+                "Underground Sea",
+                "Urborg, Tomb of Yawgmoth",
+                "Vault of Whispers",
+                "Verdant Catacombs",
+                "Volcanic Island",
+                "Wasteland",
+                "Watery Grave",
+                "Windswept Heath",
+                "Wooded Foothills"
+            ]
+        ]
+    ]
+}

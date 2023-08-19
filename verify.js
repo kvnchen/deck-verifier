@@ -1,15 +1,12 @@
 const https = require('https');
 
-// const blob = `
-// https://www.moxfield.com/decks/Y2v1HjkBmE22iiZIWVpr5w
-// https://www.moxfield.com/decks/u5L4FEUQdkuSHyzrNeLCJg
-// `;
 
-// const decklists = blob.split('\n');
+// const blob = `hey_kelvin	https://www.moxfield.com/decks/u5L4FEUQdkuSHyzrNeLCJg
+// kelvin_2	https://www.moxfield.com/decks/Y2v1HjkBmE22iiZIWVpr5w
+// mr_kelvin	https://www.moxfield.com/decks/CB_Bu5KnF06CgCShdZNNqA
+// canadianhighlanderdatabase  https://tappedout.net/mtg-decks/tezzeret-stax-nov-23rd-2019/`;
 
-const blob = `hey_kelvin	https://www.moxfield.com/decks/u5L4FEUQdkuSHyzrNeLCJg
-kelvin_2	https://www.moxfield.com/decks/Y2v1HjkBmE22iiZIWVpr5w
-mr_kelvin	https://www.moxfield.com/decks/CB_Bu5KnF06CgCShdZNNqA`;
+const blob = `hey_kelvin	https://www.moxfield.com/decks/u5L4FEUQdkuSHyzrNeLCJg`;
 
 // GET https://api2.moxfield.com/v3/decks/all/:deckHash
 // res json data
@@ -57,6 +54,67 @@ const pointsList = {
   'Yawgmoth\s Will': 1,
 };
 
+const vintageBannedList = new Set([
+  'Adriana\'s Valor',
+  'Advantageous Proclamation',
+  'Amulet of Quoz',
+  'Assemble the Rank and Vile',
+  'Backup Plan',
+  'Brago\'s Favor',
+  'Bronze Tablet',
+  'Chaos Orb',
+  'Cleanse',
+  'Contract from Below',
+  'Crusade',
+  'Darkpact',
+  'Demonic Attorney',
+  'Double Stroke',
+  'Echoing Boom',
+  'Emissary\'s Ploy',
+  'Falling Star',
+  'Hired Heist',
+  'Hold the Perimeter',
+  'Hymn of the Wilds',
+  'Immediate Action',
+  'Imprison',
+  'Incendiary Dissent',
+  'Invoke Prejudice',
+  'Iterative Analysis',
+  'Jeweled Bird',
+  'Jihad',
+  'Muzzio\'s Preparations',
+  'Natural Unity',
+  'Power Play',
+  'Pradesh Gypsies',
+  'Rebirth',
+  'Secrets of Paradise',
+  'Secret Summoning',
+  'Sentinel Dispatch',
+  'Shahrazad',
+  'Sovereign\'s Realm',
+  'Stone-Throwing Devils',
+  'Summoner\'s Bond',
+  'Tempest Efreet',
+  'Timmerian Fiends',
+  'Unexpected Potential',
+  'Weight Advantage',
+  'Worldknit'
+]);
+
+const basics = new Set([
+  'Plains',
+  'Island',
+  'Swamp',
+  'Mountain',
+  'Forest',
+  'Snow-Covered Plains',
+  'Snow-Covered Island',
+  'Snow-Covered Swamp',
+  'Snow-Covered Mountain',
+  'Snow-Covered Forest',
+  'Wastes'
+]);
+
 function parseSheets(blob) {
   const lines = blob.split('\n');
   const map = {};
@@ -71,6 +129,53 @@ function parseSheets(blob) {
   return [map, reverseMap];
 }
 
+function checkCardLegality(card, quantity, output) {
+  output.count += quantity;
+
+  if (!basics.has(card) && quantity > 1) {
+    output.nonbasicDuplicates.push(card);
+  }
+
+  if (vintageBannedList.has(card)) {
+    output.bannedCards.push(card);
+  }
+
+  if (pointsList[card]) {
+    output.pointedCards.push(card);
+    output.points += pointsList[card];
+  }
+}
+
+function checkMoxfieldLegality(card, quantity, output) {
+  output.count += quantity;
+
+  if (!/^Basic/.test(card.type_line) && (quantity > 1)) {
+    output.nonbasicDuplicates.push(card.name);
+  }
+  
+  if (card.legalities.vintage === 'banned') {
+    output.bannedCards.push(card.name);
+  }
+  
+  if (pointsList[card.name]) {
+    output.pointedCards.push(card.name);
+    output.points += pointsList[card.name];
+  }
+}
+
+function checkDeckLegality(output) {
+  if (
+    (output.count < 100) ||
+    (output.points > 10) ||
+    (output.nonbasicDuplicates.length > 0) ||
+    (output.bannedCards.length > 0) ||
+    (output.stickerDuplicates.length > 0) ||
+    ((output.stickerCount > 0) && (output.stickerCount < 10))
+  ) {
+    output.isInvalid = true;
+  }
+}
+
 function verifyMoxfield(blob) {
   try {
     const cards = blob.boards.mainboard.cards;
@@ -79,6 +184,7 @@ function verifyMoxfield(blob) {
       nonbasicDuplicates: [],
       bannedCards: [],
       stickerDuplicates: [],
+      pointedCards: [],
       count: 0,
       points: 0,
       stickerCount: 0,
@@ -86,21 +192,7 @@ function verifyMoxfield(blob) {
     };
 
     for (const o of Object.values(cards)) {
-      const card = o.card;
-
-      output.count += o.quantity;
-
-      if (!/^Basic/.test(card.type_line) && (o.quantity > 1)) {
-        output.nonbasicDuplicates.push(card.name);
-      }
-      
-      if (card.legalities.vintage === 'banned') {
-        output.bannedCards.push(card.name);
-      }
-      
-      if (pointsList[card.name]) {
-        output.points += pointsList[card.name];
-      }
+      checkMoxfieldLegality(o.card, o.quantity, output);
     }
 
     if (blob.boards.stickers.count > 0) {
@@ -113,16 +205,7 @@ function verifyMoxfield(blob) {
       }
     }
 
-    if (
-      (output.count < 100) ||
-      (output.points > 10) ||
-      (output.nonbasicDuplicates.length > 0) ||
-      (output.bannedCards.length > 0) ||
-      (output.stickerDuplicates.length > 0) ||
-      ((output.stickerCount > 0) && (output.stickerCount < 10))
-    ) {
-      output.isInvalid = true;
-    }
+    checkDeckLegality(output);
 
     return output;
   } catch (err) {
@@ -130,9 +213,43 @@ function verifyMoxfield(blob) {
   }
 }
 
-async function makeMoxfieldReq(id) {
+// https://tappedout.net/api/collection:deck/proliferate-superfriends-mar-18th-2020/data/?cb=1619568353&cat=type
+// I think it uses a unix timestamp of when it was last updated in the api call... last_update_epoch
+// oh, the whole deck is in a textarea element. that makes things easier
+function verifyTappedout(xml) {
+  const deckRegex = /(?<=id="mtga-textarea">)[\w\s\(\)',-]+(?=\n)/;
+  const decklist = xml.match(deckRegex)[0];
+
+  const nameRegex = /(?<=<title>)[\w\s\(\)',-\.]+(?=<\/title>)/;
+  const name = xml.match(nameRegex)[0];
+  const output = {
+    name: name,
+    nonbasicDuplicates: [],
+    bannedCards: [],
+    stickerDuplicates: [],
+    pointedCards: [],
+    count: 0,
+    points: 0,
+    stickerCount: 0,
+    isInvalid: false
+  };
+
+  for (const line of decklist.split('\n')) {
+    if (line.length > 0) {
+      const count = Number(line.split(' ')[0]);
+      const card = line.match(/(?<=\d\s).+(?=\s\()/)[0];
+  
+      checkCardLegality(card, count, output);
+    }
+  }
+
+  checkDeckLegality(output);
+  return output;
+}
+
+async function makeReq({ url, parser, type }) {
   return new Promise((resolve) => {
-    https.get(`https://api2.moxfield.com/v3/decks/all/${id}`, (res) => {
+    https.get(url, (res) => {
       let data = "";
   
       // A chunk of data has been recieved.
@@ -142,7 +259,12 @@ async function makeMoxfieldReq(id) {
   
       // The whole resonse has been received. Print out the result.
       res.on("end", () => {
-        const output = verifyMoxfield(JSON.parse(data));
+        let output;
+        if (type === 'JSON') {
+          output = parser(JSON.parse(data));
+        } else if (type === 'XML') {
+          output = parser(data);
+        }
         resolve(output);
       });
     }).on("error", err => {
@@ -177,9 +299,9 @@ async function processLinks(map, reverseMap) {
   for (let i = 0; i < moxfieldIDs.length; i++) {
     let res;
     if (i === moxfieldIDs.length - 1) {
-      res = await rateLimit(0, makeMoxfieldReq, moxfieldIDs[i]);
+      res = await rateLimit(0, makeReq, { url: `https://api2.moxfield.com/v3/decks/all/${moxfieldIDs[i]}`, parser: verifyMoxfield, type: 'JSON' });
     } else {
-      res = await rateLimit(limit, makeMoxfieldReq, moxfieldIDs[i]);
+      res = await rateLimit(limit, makeReq, { url: `https://api2.moxfield.com/v3/decks/all/${moxfieldIDs[i]}`, parser: verifyMoxfield, type: 'JSON' });
     }
     output[reverseMap[`https://www.moxfield.com/decks/${moxfieldIDs[i]}`]] = res;
   }
@@ -187,9 +309,11 @@ async function processLinks(map, reverseMap) {
   console.log(output);
 }
 
+// processLinks(...parseSheets(blob));
 
-// console.log(parseSheets(blob));
-// processLinks(decklists);
+async function testTappedout() {
+  const tappedoutTest = await rateLimit(0, makeReq, { url: 'https://tappedout.net/mtg-decks/tezzeret-stax-nov-23rd-2019/', parser: verifyTappedout, type: 'XML' });
+  console.log(tappedoutTest);
+}
 
-processLinks(...parseSheets(blob));
-
+testTappedout();
