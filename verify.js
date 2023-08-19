@@ -1,12 +1,14 @@
 const https = require('https');
 
 
-// const blob = `hey_kelvin	https://www.moxfield.com/decks/u5L4FEUQdkuSHyzrNeLCJg
-// kelvin_2	https://www.moxfield.com/decks/Y2v1HjkBmE22iiZIWVpr5w
-// mr_kelvin	https://www.moxfield.com/decks/CB_Bu5KnF06CgCShdZNNqA
-// canadianhighlanderdatabase  https://tappedout.net/mtg-decks/tezzeret-stax-nov-23rd-2019/`;
+const blob = `hey_kelvin	https://www.moxfield.com/decks/u5L4FEUQdkuSHyzrNeLCJg
+kelvin_2	https://www.moxfield.com/decks/Y2v1HjkBmE22iiZIWVpr5w
+canadianhighlanderdatabase	https://tappedout.net/mtg-decks/tezzeret-stax-nov-23rd-2019/`;
 
-const blob = `hey_kelvin	https://www.moxfield.com/decks/u5L4FEUQdkuSHyzrNeLCJg`;
+// const blob = `canadianhighlanderdatabase	https://tappedout.net/mtg-decks/tezzeret-stax-nov-23rd-2019/`;
+// const blob = `hey_kelvin	https://www.moxfield.com/decks/u5L4FEUQdkuSHyzrNeLCJg`;
+//mr_kelvin	https://www.moxfield.com/decks/CB_Bu5KnF06CgCShdZNNqA
+
 
 // GET https://api2.moxfield.com/v3/decks/all/:deckHash
 // res json data
@@ -146,23 +148,6 @@ function checkCardLegality(card, quantity, output) {
   }
 }
 
-function checkMoxfieldLegality(card, quantity, output) {
-  output.count += quantity;
-
-  if (!/^Basic/.test(card.type_line) && (quantity > 1)) {
-    output.nonbasicDuplicates.push(card.name);
-  }
-  
-  if (card.legalities.vintage === 'banned') {
-    output.bannedCards.push(card.name);
-  }
-  
-  if (pointsList[card.name]) {
-    output.pointedCards.push(card.name);
-    output.points += pointsList[card.name];
-  }
-}
-
 function checkDeckLegality(output) {
   if (
     (output.count < 100) ||
@@ -192,7 +177,7 @@ function verifyMoxfield(blob) {
     };
 
     for (const o of Object.values(cards)) {
-      checkMoxfieldLegality(o.card, o.quantity, output);
+      checkCardLegality(o.card.name, o.quantity, output);
     }
 
     if (blob.boards.stickers.count > 0) {
@@ -286,13 +271,16 @@ function rateLimit(delay, func, args) {
 async function processLinks(map, reverseMap) {
   const limit = 10000;
   const moxfieldIDs = [];
+  const tappedoutLinks = [];
   const output = {};
   // const users = Object.keys(map);
   const links = Object.values(map);
-
+  
   for (const link of links) {
     if (/moxfield/.test(link)) {
       moxfieldIDs.push(link.match(/(?<=https:\/\/www\.moxfield\.com\/decks\/)\w+/)[0]);
+    } else if (/tappedout/.test(link)) {
+      tappedoutLinks.push(link);
     }
   }
 
@@ -306,14 +294,23 @@ async function processLinks(map, reverseMap) {
     output[reverseMap[`https://www.moxfield.com/decks/${moxfieldIDs[i]}`]] = res;
   }
 
+  for (let j = 0; j < tappedoutLinks.length; j++) {
+    if (j === tappedoutLinks.length - 1) {
+      res = await rateLimit(0, makeReq, { url: tappedoutLinks[j], parser: verifyTappedout, type: 'XML' });
+    } else {
+      res = await rateLimit(10000, makeReq, { url: tappedoutLinks[j], parser: verifyTappedout, type: 'XML' });
+    }
+    output[reverseMap[tappedoutLinks[j]]] = res;
+  }
+
   console.log(output);
 }
 
-// processLinks(...parseSheets(blob));
+processLinks(...parseSheets(blob));
 
 async function testTappedout() {
   const tappedoutTest = await rateLimit(0, makeReq, { url: 'https://tappedout.net/mtg-decks/tezzeret-stax-nov-23rd-2019/', parser: verifyTappedout, type: 'XML' });
   console.log(tappedoutTest);
 }
 
-testTappedout();
+// testTappedout();
