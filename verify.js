@@ -1,4 +1,4 @@
-const https = require('https');
+// const https = require('https');
 
 
 const blob = `hey_kelvin	https://www.moxfield.com/decks/u5L4FEUQdkuSHyzrNeLCJg
@@ -232,29 +232,74 @@ function verifyTappedout(xml) {
   return output;
 }
 
-async function makeReq({ url, parser, type }) {
+// function makeReq({ url, parser, type, method, path }) {
+//   return new Promise((resolve) => {
+//     if (method !== undefined) {
+//       https.request({
+//         hostname: url,
+//         method: method,
+//         path: path
+//       }, (res) => {
+//         let data = "";
+    
+//         // A chunk of data has been recieved.
+//         res.on("data", chunk => {
+//           data += chunk;
+//         });
+    
+//         // The whole resonse has been received. Print out the result.
+//         res.on("end", () => {
+//           let output;
+//           if (type === 'JSON') {
+//             output = parser(JSON.parse(data));
+//           } else if (type === 'XML') {
+//             output = parser(data);
+//           } else {
+//             output = data;
+//           }
+//           resolve(output);
+//         });
+//       }).on("error", err => {
+//         console.log("Error: " + err.message);
+//       });
+//     } else {
+//       https.get(url, (res) => {
+//         let data = "";
+    
+//         // A chunk of data has been recieved.
+//         res.on("data", chunk => {
+//           data += chunk;
+//         });
+    
+//         // The whole resonse has been received. Print out the result.
+//         res.on("end", () => {
+//           let output;
+//           if (type === 'JSON') {
+//             output = parser(JSON.parse(data));
+//           } else if (type === 'XML') {
+//             output = parser(data);
+//           }
+//           resolve(output);
+//         });
+//       }).on("error", err => {
+//         console.log("Error: " + err.message);
+//       });
+//     }
+//   });
+// }
+
+function makeXMLRequest({ url, parser, type, method, path }) {
   return new Promise((resolve) => {
-    https.get(url, (res) => {
-      let data = "";
-  
-      // A chunk of data has been recieved.
-      res.on("data", chunk => {
-        data += chunk;
+    if (method !== undefined) {
+      const req = new XMLHttpRequest();
+
+      req.addEventListener('load', (res) => {
+        resolve(res);
       });
-  
-      // The whole resonse has been received. Print out the result.
-      res.on("end", () => {
-        let output;
-        if (type === 'JSON') {
-          output = parser(JSON.parse(data));
-        } else if (type === 'XML') {
-          output = parser(data);
-        }
-        resolve(output);
-      });
-    }).on("error", err => {
-      console.log("Error: " + err.message);
-    });
+
+      req.open(method, url);
+      req.send();
+    }
   });
 }
 
@@ -287,18 +332,18 @@ async function processLinks(map, reverseMap) {
   for (let i = 0; i < moxfieldIDs.length; i++) {
     let res;
     if (i === moxfieldIDs.length - 1) {
-      res = await rateLimit(0, makeReq, { url: `https://api2.moxfield.com/v3/decks/all/${moxfieldIDs[i]}`, parser: verifyMoxfield, type: 'JSON' });
+      res = await rateLimit(0, makeXMLReq, { url: `https://api2.moxfield.com/v3/decks/all/${moxfieldIDs[i]}`, parser: verifyMoxfield, type: 'JSON' });
     } else {
-      res = await rateLimit(limit, makeReq, { url: `https://api2.moxfield.com/v3/decks/all/${moxfieldIDs[i]}`, parser: verifyMoxfield, type: 'JSON' });
+      res = await rateLimit(limit, makeXMLReq, { url: `https://api2.moxfield.com/v3/decks/all/${moxfieldIDs[i]}`, parser: verifyMoxfield, type: 'JSON' });
     }
     output[reverseMap[`https://www.moxfield.com/decks/${moxfieldIDs[i]}`]] = res;
   }
 
   for (let j = 0; j < tappedoutLinks.length; j++) {
     if (j === tappedoutLinks.length - 1) {
-      res = await rateLimit(0, makeReq, { url: tappedoutLinks[j], parser: verifyTappedout, type: 'XML' });
+      res = await rateLimit(0, makeXMLReq, { url: tappedoutLinks[j], parser: verifyTappedout, type: 'XML' });
     } else {
-      res = await rateLimit(10000, makeReq, { url: tappedoutLinks[j], parser: verifyTappedout, type: 'XML' });
+      res = await rateLimit(10000, makeXMLReq, { url: tappedoutLinks[j], parser: verifyTappedout, type: 'XML' });
     }
     output[reverseMap[tappedoutLinks[j]]] = res;
   }
@@ -306,11 +351,36 @@ async function processLinks(map, reverseMap) {
   console.log(output);
 }
 
-processLinks(...parseSheets(blob));
+// OPTIONS https://api2.moxfield.com/v2/decks/u5L4FEUQdkuSHyzrNeLCJg/clone
+// POST https://api2.moxfield.com/v2/decks/u5L4FEUQdkuSHyzrNeLCJg/clone
+// {name: "duplication test", includePrimer: false, includeTags: false}
+// hm... socket hangup
+async function cloneMoxfield() {
+  const res = await makeXMLReq({
+    url: 'api2.moxfield.com',
+    parser: (res) => { return res; },
+    type: '',
+    method: 'OPTIONS',
+    path: '/v2/decks/u5L4FEUQdkuSHyzrNeLCJg/clone'
+  });
+  console.log(res);
+}
 
 async function testTappedout() {
-  const tappedoutTest = await rateLimit(0, makeReq, { url: 'https://tappedout.net/mtg-decks/tezzeret-stax-nov-23rd-2019/', parser: verifyTappedout, type: 'XML' });
+  const tappedoutTest = await rateLimit(0, makeXMLReq, { url: 'https://tappedout.net/mtg-decks/tezzeret-stax-nov-23rd-2019/', parser: verifyTappedout, type: 'XML' });
   console.log(tappedoutTest);
 }
 
+async function testXML() {
+  const xmlTest = await rateLimit(0, makeXMLRequest, { url: 'https://en.wikipedia.org/', method: 'GET' });
+  console.log(xmlTest);
+}
+
 // testTappedout();
+
+// cloneMoxfield();
+
+// processLinks(...parseSheets(blob));
+
+console.log('xml test');
+testXML();

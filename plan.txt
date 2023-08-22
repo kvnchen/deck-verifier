@@ -5,6 +5,6 @@
 3. make new moxfield copy of the deck
 
 
-hm, not finding deck legality in json data
-seems to be computed in front end
+deck duplication requires manually logging in and using an access_token
+api login is restricted. only handed out to viable large companies.
 
